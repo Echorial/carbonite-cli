@@ -13,5 +13,6 @@ A simple carbonite compiler cli run entirely in node (slow but works)
 * `carbonite compile javascript.source main.carb bin/out.js`
 * `carbonite pipe Project/php.pipeline myVar=123`
 
-## Github
+## Links
 * [Github](https://github.com/Echorial/carbonite-cli)
+* [npm](https://www.npmjs.com/package/carbonite-cli)
