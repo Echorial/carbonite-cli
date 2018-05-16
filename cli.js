@@ -1,18 +1,15 @@
 #!/usr/bin/env node
 const fs = require("fs");
 const program = require('commander');
-const Carbonite = require('./bin/carbonite.js');
+const Carbonite = require('carbonite');
 const path = require("path");
 
 function includeLib(c) {
-	let base = path.resolve(__dirname, "./library/library.carb");
-	let native = c.addSource("Native", fs.readFileSync(base, "utf8"));
-	native.file = base;
-	native.process();
+	c.addNativeLibrary();
 }
 
 program
-	.version('0.0.1')
+	.version('1.0.2')
 	.command('compile <platform> <file> <location>')
 	.description('Compile')
 	.action(function (platform, file, location) { // Non pipeline compiler

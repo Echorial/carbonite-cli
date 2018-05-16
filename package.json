@@ -1,11 +1,8 @@
 {
 	"name": "carbonite-cli",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "",
 	"main": "cli.js",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
 	"keywords": [
 		"carbon",
 		"compiler"
@@ -13,6 +10,7 @@
 	"author": "Echorial",
 	"license": "MIT",
 	"dependencies": {
+		"carbonite": "^0.1.0",
 		"commander": "^2.15.1"
 	},
 	"bin": {
