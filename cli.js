@@ -104,7 +104,18 @@ program
 				output = path.resolve(pipeline, "../../" + output.substr(1));
 			}
 
-			fs.writeFileSync(output, c.rawOutput + concat);
+			if (c.pipeConfig.platform == "documentation.dynamic") {
+				if (!fs.existsSync(output))
+					fs.mkdirSync(output);
+				fs.writeFileSync(output + "/index.html", "<!DOCTYPE html><html><head><script src='core.js'></script><link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'><link rel='stylesheet' href='theme.css'></link></head><body><script src='data.js'></script></body></html>");
+
+				let docDir = path.resolve(path.dirname(require.resolve("carbonite")) + "/../src/doc/dynamic/") + "/";
+				fs.writeFileSync(output + "/core.js", fs.readFileSync(docDir + "core.js"));
+				fs.writeFileSync(output + "/theme.css", fs.readFileSync(docDir + "/themes/material.css"));
+
+				fs.writeFileSync(output + "/data.js", c.rawOutput);
+			}else
+				fs.writeFileSync(output, c.rawOutput + concat);
 		}
 
 		if (c.autoCache) {
