@@ -3,7 +3,7 @@
 A simple carbonite compiler cli run entirely in node (slow but works)
 
 ## Install
-* `npm install carbonite-cli`
+`$ npm install carbonite-cli`
 
 ## Usage
 * Single file `carbonite compile <platform> <input file> <ouput file>`
