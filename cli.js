@@ -94,9 +94,12 @@ program
 		if (!c.status.hadError) {
 			let concat = "";
 
-			if (c.pipeConfig.type === "app")
-				concat = "App.start();";
-			else if (c.pipeConfig.type == "package")
+			if (c.pipeConfig.type === "app") {
+				if (c.pipeConfig.platform == "cpp.source")
+					concat = `int main(int argc, char *argv[]) {\n	App app;\n	return app.start(std::vector<std::string>(argv + 1, argv + argc));\n}`;
+				else
+					concat = "App.start();";
+			}else if (c.pipeConfig.type == "package")
 				if (c.pipeConfig["javascript.module"])
 					concat = "module.exports = " + c.pipeConfig["javascript.module"] + ";";
 			let output = c.pipeConfig.output || "./carbonOutputFile";
