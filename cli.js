@@ -4,8 +4,49 @@ const program = require('commander');
 const Carbonite = require('carbonite');
 const path = require("path");
 
+const registryFile = "registry.json";
+
+let localRegistry = null;
+
+let localPath = process.env.HOMEPATH + "/carbonPackages"; // TODO: Fix
+
 function includeLib(c) {
 	c.addNativeLibrary();
+}
+
+function findProject(dir) {
+	if (fs.existsSync(dir + "/Project")) {
+		return dir + "/Project";
+	}
+}
+
+function loadLocalRegistry() {
+	if (!localRegistry) {
+		if (!fs.existsSync(localPath))
+			fs.mkdirSync(localPath);
+
+		if (!fs.existsSync(localPath + "/" + registryFile))
+			fs.writeFileSync(localPath + "/" + registryFile, "{}");
+
+		localRegistry = JSON.parse(fs.readFileSync(localPath + "/" + registryFile, "utf8"));
+	}
+}
+
+function saveLocalRegistry() {
+	if (!fs.existsSync(localPath))
+		fs.mkdirSync(localPath);
+
+	fs.writeFileSync(localPath + "/" + registryFile, JSON.stringify(localRegistry || {}, null, "\t"));
+}
+
+function importPackage(name, version, callback) {
+	loadLocalRegistry();
+
+	if (localRegistry[name]) {
+		callback(null, localRegistry[name].entry);
+	}else{
+		callback("Unkown package '" + name + "'");
+	}
 }
 
 program
@@ -15,6 +56,7 @@ program
 	.action(function (platform, file, location) { // Non pipeline compiler
 		let start = Date.now();
 		let c = new Carbonite.Compiler();
+		c.importHandler = importPackage;
 
 		// Include native library(string, int, bool, standards)
 		includeLib(c);
@@ -33,12 +75,54 @@ program
 		console.log(c.status.stringify());
 	});
 
-	program.command('pipe <pipeline> [args]')
+program.command("register")
+	.description("Links this package to the local system registry")
+	.action(function () {
+		loadLocalRegistry();
+		let dir = process.cwd();
+		let prj = findProject(dir);
+
+		if (!prj) {
+			console.log("No /Project directory found.");
+		}
+
+		if (fs.existsSync(prj + "/package.json")) {
+			let pack;
+
+			try {
+				pack = JSON.parse(fs.readFileSync(prj + "/package.json"));
+			}catch (e) {
+				console.log("Error while parsing Project/package.json. " + e);
+				return;
+			}
+
+			if (!pack.name) {
+				console.log("Package name required in Project/package.json");
+				return;
+			}
+
+			if (!pack.entry) {
+				console.log("Package entry path required in Project/package.json");
+				return;
+			}
+			
+			localRegistry[pack.name] = {location: dir, entry: dir + "/" + pack.entry};
+
+			saveLocalRegistry();
+
+			console.log("Linked " + pack.name);
+		}else{
+			console.log("No Project/package.json found.");
+		}
+	});
+
+program.command('pipe <pipeline> [args]')
 	.option("--link <header>")
 	.description('Build from a pipeline')
 	.action(function (pipeline, args, opt) { // Pipeline parser
 		let start = Date.now();
 		let c = new Carbonite.Compiler();
+		c.importHandler = importPackage;
 
 		includeLib(c);
 
@@ -73,7 +157,7 @@ program
 		if (c.pipeConfig.autoCache) {
 			let cache = {};
 			if (!fs.existsSync(project + "/tmp"))
-				fs.mkdir(project + "/tmp");
+				fs.mkdirSync(project + "/tmp");
 			
 			if (fs.existsSync(project + "/tmp/cache.json"))
 				cache = JSON.parse(fs.readFileSync(project + "/tmp/cache.json"));
