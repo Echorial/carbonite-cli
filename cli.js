@@ -167,6 +167,10 @@ program.command('pipe <pipeline> [args]')
 				c.loadCache(cache);
 		}
 
+		if (c.pipeConfig.useOldTemplates) {
+			c.useOldTemplates = true;
+		}
+
 		let enPath = path.resolve(pipeline, "../../" + c.pipeConfig.entry);
 
 		let entry = c.addSource(enPath, fs.readFileSync(enPath, "utf8"));
