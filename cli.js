@@ -17,6 +17,43 @@ function includeLib(c) {
 function findProject(dir) {
 	if (fs.existsSync(dir + "/Project")) {
 		return dir + "/Project";
+	}else if (path.basename(dir).toLowerCase() == "project") {
+		return dir;
+	}else{
+		let up = fs.realpathSync(path.join(dir, ".."));
+
+		if (fs.realpathSync("/") == up)
+			return false;
+		else
+			return findProject(up);
+	}
+}
+
+function getPackageInfo(dir) {
+	let prj = findProject(dir);
+
+	if (!prj) {
+		console.log("No /Project directory found.");
+	}
+
+	if (fs.existsSync(prj + "/package.json")) {
+		let pack;
+
+		try {
+			pack = JSON.parse(fs.readFileSync(prj + "/package.json"));
+		}catch (e) {
+			console.log("Error while parsing Project/package.json. " + e);
+			return;
+		}
+
+		if (!pack.name) {
+			console.log("Package name required in Project/package.json");
+			return;
+		}
+		
+		return {package: pack, location: prj};
+	}else{
+		return {package: false, location: prj};
 	}
 }
 
@@ -45,7 +82,7 @@ function importPackage(name, version, callback) {
 	if (localRegistry[name]) {
 		callback(null, localRegistry[name].entry);
 	}else{
-		callback("Unkown package '" + name + "'");
+		callback("Unknown package '" + name + "'");
 	}
 }
 
@@ -66,13 +103,32 @@ program
 		source.file = file;
 		source.process();
 
-		// Build and assemble into raw ouput
+		// Build and assemble into raw output
 		c.build(platform, {});
 		if (!c.status.hadError)
 			fs.writeFileSync(location, c.rawOutput);
 
 		console.log("Built in " + (Date.now() - start) + " ms");
 		console.log(c.status.stringify());
+	});
+
+program
+	.command("info")
+	.description("Displays info about the current project")
+	.action(function () {
+		let dir = process.cwd();
+		let data = getPackageInfo(dir);
+
+		if (data && data.package) {
+			let pack = data.package;
+
+			console.log("");
+			console.log("\x1b[34m" + pack.name);
+			console.log("");
+			console.log("\x1b[0m" + JSON.stringify(pack, null, "	"));
+		}else if (data.location) {
+			console.log("No Project/package.json found.");
+		}
 	});
 
 program.command("register")
@@ -147,6 +203,33 @@ program.command('pipe <pipeline> [args]')
 		}
 
 		let file = pipeline;
+		let rootDir;
+
+		if (!fs.existsSync(file)) {
+			let dir = process.cwd();
+			let data = getPackageInfo(dir);
+
+			if (!data) {
+				console.log("Unable to find pipeline " + file);
+				return;
+			}else{
+				let splits = file.split(".");
+
+				if (splits[splits.length - 1] == "pipeline") {
+					file = data.location + "/" + file;
+				}else{
+					file = data.location + "/" + file + ".pipeline";
+				}
+
+				rootDir = path.resolve(data.location, "../");
+
+				if (!fs.existsSync(file)) {
+					console.log("Unable to find pipeline " + file);
+					return;
+				}
+			}
+		}
+
 		let source = c.addSource(file, fs.readFileSync(file, "utf8"));
 		source.pipeline = true;
 		source.file = file;
@@ -171,7 +254,12 @@ program.command('pipe <pipeline> [args]')
 			c.useOldTemplates = true;
 		}
 
-		let enPath = path.resolve(pipeline, "../../" + c.pipeConfig.entry);
+		let enPath;
+
+		if (!rootDir)
+			enPath = path.resolve(pipeline, "../../" + c.pipeConfig.entry);
+		else
+			enPath = path.resolve(rootDir, "./" + c.pipeConfig.entry);
 
 		let entry = c.addSource(enPath, fs.readFileSync(enPath, "utf8"));
 		entry.file = enPath;
