@@ -235,7 +235,11 @@ program.command('pipe <pipeline> [args]')
 		source.file = file;
 		source.process();
 
-		let project = path.dirname(pipeline);
+		let project;
+		if (rootDir)
+			project = rootDir + "/Project";
+		else
+			project = path.dirname(pipeline);
 
 		if (c.pipeConfig.autoCache) {
 			let cache = {};
