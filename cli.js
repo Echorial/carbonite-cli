@@ -278,7 +278,7 @@ program.command('pipe <pipeline> [args]')
 				if (c.pipeConfig.platform == "cpp.source")
 					concat = `int main(int argc, char *argv[]) {\n	App app;\n	return app.start(std::unique_ptr<std::vector<std::string>>(new std::vector<std::string>(argv + 1, argv + argc)));\n}`;
 				else
-					concat = "App.start();";
+					concat = "carbonApp = new App();\ncarbonApp.start();";
 			}else if (c.pipeConfig.type == "package")
 				if (c.pipeConfig["javascript.module"])
 					concat = "module.exports = " + c.pipeConfig["javascript.module"] + ";";
