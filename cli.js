@@ -247,7 +247,11 @@ program.command('pipe <pipeline> [args]')
 				fs.mkdirSync(project + "/tmp");
 			
 			if (fs.existsSync(project + "/tmp/cache.json"))
-				cache = JSON.parse(fs.readFileSync(project + "/tmp/cache.json"));
+				try {
+					cache = JSON.parse(fs.readFileSync(project + "/tmp/cache.json"));
+				} catch (e) {
+					cache = {};
+				}
 
 			c.autoCache = true;
 			if (c.loadCache)
