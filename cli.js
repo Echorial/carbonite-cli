@@ -93,6 +93,7 @@ program
 	.action(function (platform, file, location) { // Non pipeline compiler
 		let start = Date.now();
 		let c = new Carbonite.Compiler();
+		
 		c.importHandler = importPackage;
 
 		// Include native library(string, int, bool, standards)
@@ -179,7 +180,7 @@ program.command('pipe <pipeline> [args]')
 		let start = Date.now();
 		let c = new Carbonite.Compiler();
 		c.importHandler = importPackage;
-
+		
 		includeLib(c);
 
 		if (opt.link) {
@@ -282,7 +283,7 @@ program.command('pipe <pipeline> [args]')
 				if (c.pipeConfig.platform == "cpp.source")
 					concat = `int main(int argc, char *argv[]) {\n	App app;\n	return app.start(std::unique_ptr<std::vector<std::string>>(new std::vector<std::string>(argv + 1, argv + argc))).value_or(0);\n}`;
 				else
-					concat = "carbonApp = new App();\ncarbonApp.start();";
+					concat = "carbonApp = new App();\ncarbonApp.start([]);";
 			}else if (c.pipeConfig.type == "package")
 				if (c.pipeConfig["javascript.module"])
 					concat = "module.exports = " + c.pipeConfig["javascript.module"] + ";";
