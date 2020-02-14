@@ -263,6 +263,10 @@ program.command('pipe <pipeline> [args]')
 			c.useOldTemplates = true;
 		}
 
+		if (c.pipeConfig.asyncAwait) {
+			c.asyncAwait = true;
+		}
+
 		let enPath;
 
 		if (!rootDir)
