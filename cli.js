@@ -175,6 +175,7 @@ program.command("register")
 
 program.command('pipe <pipeline> [args]')
 	.option("--link <header>")
+	.option("--no-cache", "Disabled autoCaching")
 	.description('Build from a pipeline')
 	.action(function (pipeline, args, opt) { // Pipeline parser
 		let start = Date.now();
@@ -182,6 +183,8 @@ program.command('pipe <pipeline> [args]')
 		c.importHandler = importPackage;
 		
 		includeLib(c);
+
+		noCache = opt.cache;
 
 		if (opt.link) {
 			let headRaw = JSON.parse(fs.readFileSync(opt.link, "utf8"));
@@ -242,7 +245,7 @@ program.command('pipe <pipeline> [args]')
 		else
 			project = path.dirname(pipeline);
 
-		if (c.pipeConfig.autoCache) {
+		if (c.pipeConfig.autoCache && noCache) {
 			let cache = {};
 			if (!fs.existsSync(project + "/tmp"))
 				fs.mkdirSync(project + "/tmp");
